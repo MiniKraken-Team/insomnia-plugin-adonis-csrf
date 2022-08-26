@@ -1,0 +1,20 @@
+{
+  "name": "insomnia-plugin-adonis-csrf",
+  "version": "0.1.0",
+  "description": "",
+  "insomnia": {
+    "name": "adonis-csrf",
+    "description": "For setting X-XSRF-TOKEN header in request from XSRF-TOKEN cookie in adonis applications."
+  },
+  "main": "main.js",
+  "keywords": [
+    "insomnia",
+    "plugin",
+    "adonis",
+    "csrf",
+  ],
+  "author": "Maxime Huylebroeck",
+  "license": "MIT",
+  "devDependencies": {
+  }
+}
