@@ -1,46 +1,25 @@
-module.exports.templateTags = [{
-    name: 'adonis_csrf',
-    displayName: 'Adonis CSRF',
-    description: 'Apply XSRF-TOKEN from cookie for X-XSRF-TOKEN request header',
-    args: [
-        {
-            displayName: 'CSRF Cookie Name',
-            type: 'string',
-            defaultValue: 'XSRF-TOKEN',
-            placeholder: 'It is "XSRF-TOKEN" by default in adonis',
+module.exports.requestHooks = [
+    async (context) => {
+        if(await context.store.hasItem('XSRF-TOKEN')) {
+            context.request.addHeader('X-XSRF-TOKEN', await context.store.getItem('XSRF-TOKEN'))
         }
-    ],
-    async run(context, cookieName = 'XSRF-TOKEN') {
-        const cookieJar = await this.getCookieJar(context);
-
-        const token = cookieJar.cookies?.find(cookie => cookie.key === cookieName);
-
-        if (token === undefined) {
-            throw new Error(`${cookieName} not found in cookies`);
-        }
-
-        return token.value;
     },
+];
 
-    async getCookieJar(context) {
-        const { meta } = context;
+module.exports.responseHooks = [
+    async (context) => {
+        console.debug()
+        const cookie = context.response.getHeaders().filter(cookie => cookie.name === 'set-cookie' && cookie.value.includes('XSRF-TOKEN'))[0]
+        /*for(cookie in cookies) {
+            if(cookie.value.includes('XSRF-TOKEN')) {
+                console.log('found')
+            }
+        }*/
 
-        if (!meta.requestId || !meta.workspaceId) {
-            throw new Error(`Request ID or workspace ID not found`);
+        if (cookie) {
+            console.debug(context.store.setItem('XSRF-TOKEN', cookie.value.split(';')[0].split('=')[1]))
+        } else {
+            context.store.removeItem('XSRF-TOKEN')
         }
-
-        const workspace = await context.util.models.workspace.getById(meta.workspaceId);
-
-        if (!workspace) {
-            throw new Error(`Workspace not found for ${meta.workspaceId}`);
-        }
-
-        const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
-
-        if (!cookieJar) {
-            throw new Error(`Cookie jar not found for ${meta.workspaceId}`);
-        }
-
-        return cookieJar;
     },
-}];
+]
